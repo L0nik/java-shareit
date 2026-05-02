@@ -1,0 +1,25 @@
+package ru.practicum.shareit.user.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class UpdateUserRequest {
+
+    @Pattern(regexp = ".*\\S.*", message = "Строка не должна быть пустой или состоять только из пробелов")
+    private String name;
+
+    @Email
+    private String email;
+
+    public boolean hasName() {
+        return name != null;
+    }
+
+    public boolean hasEmail() {
+        return email != null;
+    }
+}
