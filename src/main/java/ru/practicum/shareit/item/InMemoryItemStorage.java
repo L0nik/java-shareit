@@ -11,7 +11,7 @@ import java.util.Map;
 @Repository
 public class InMemoryItemStorage implements ItemStorage {
 
-    private final static Map<Long, Item> items = new HashMap<>();
+    private static final Map<Long, Item> items = new HashMap<>();
     private static Long lastId = 0L;
 
     @Override
