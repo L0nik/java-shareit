@@ -1,20 +1,20 @@
 package ru.practicum.shareit.user;
 
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.user.dto.CreateUserRequest;
 import ru.practicum.shareit.user.dto.UpdateUserRequest;
 
-@Component
+@UtilityClass
 public class UserMapper {
 
-    public static User mapCreateUserDtoToUser(CreateUserRequest userData) {
+    public User mapCreateUserDtoToUser(CreateUserRequest userData) {
         User user = new User();
         user.setName(userData.getName());
         user.setEmail(userData.getEmail());
         return user;
     }
 
-    public static User updateUserFields(User user, UpdateUserRequest userData) {
+    public void updateUserFields(User user, UpdateUserRequest userData) {
 
         if (userData.hasName()) {
             user.setName(userData.getName());
@@ -24,6 +24,5 @@ public class UserMapper {
             user.setEmail(userData.getEmail());
         }
 
-        return user;
     }
 }

@@ -34,12 +34,14 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponse updateItem(Long ownerId, Long itemId, ItemUpdateRequest itemData) {
         log.info("ItemServiceImpl: начало обновления данных вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
+        userStorage.checkIfUserExists(ownerId);
         Item item = itemStorage.getItemById(itemId);
         if (!item.getOwnerId().equals(ownerId)) {
             String message = String.format("Пользователь %d не является владельцем вещи %d", ownerId, itemId);
             throw new NotFoundException(message);
         }
         ItemMapper.updateItemFields(item, itemData);
+        itemStorage.updateItem(item);
         log.info("ItemServiceImpl: обновлены данные вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
         return ItemMapper.mapToItemResponse(item);
     }

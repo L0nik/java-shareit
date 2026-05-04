@@ -1,11 +1,9 @@
 package ru.practicum.shareit.item.dto;
 
 import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class ItemUpdateRequest {
 
     @Pattern(regexp = ".*\\S.*", message = "Название не должно быть пустым или состоять только из пробелов")

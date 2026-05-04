@@ -8,14 +8,14 @@ import java.util.Collection;
 
 public interface ItemService {
 
-    public ItemResponse createItem(ItemCreateRequest itemData, Long ownerId);
+    ItemResponse createItem(ItemCreateRequest itemData, Long ownerId);
 
-    public ItemResponse updateItem(Long userId, Long itemId, ItemUpdateRequest itemData);
+    ItemResponse updateItem(Long userId, Long itemId, ItemUpdateRequest itemData);
 
-    public ItemResponse getItemById(Long itemId);
+    ItemResponse getItemById(Long itemId);
 
-    public Collection<ItemResponse> getItemsByOwner(Long userId);
+    Collection<ItemResponse> getItemsByOwner(Long userId);
 
-    public Collection<ItemResponse> searchForItems(String text);
+    Collection<ItemResponse> searchForItems(String text);
 
 }

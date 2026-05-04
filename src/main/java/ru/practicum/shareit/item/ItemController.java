@@ -31,7 +31,7 @@ public class ItemController {
     public ItemResponse updateItem(
             @RequestHeader("X-Sharer-User-Id") Long userId,
             @PathVariable Long itemId,
-            @RequestBody ItemUpdateRequest itemData
+            @RequestBody @Valid ItemUpdateRequest itemData
     ) {
         log.info("ItemController: получен запрос на обновление данных вещи {} (itemId={}, userId={})", itemData, itemId, userId);
         return itemService.updateItem(userId, itemId, itemData);

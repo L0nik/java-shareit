@@ -2,11 +2,9 @@ package ru.practicum.shareit.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class UpdateUserRequest {
 
     @Pattern(regexp = ".*\\S.*", message = "Имя не должно быть пустым или состоять только из пробелов")

@@ -42,8 +42,8 @@ public class UserService {
                 throw new ValidationException(message);
             }
         }
-        user = UserMapper.updateUserFields(user, userData);
-        user = userStorage.updateUser(user);
+        UserMapper.updateUserFields(user, userData);
+        userStorage.updateUser(user);
         log.info("UserService: обновлены данные пользователя (id={}) {}", id, userData);
         return user;
     }

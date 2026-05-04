@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
@@ -8,11 +8,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@Repository
+@Component
 public class InMemoryItemStorage implements ItemStorage {
 
-    private static final Map<Long, Item> items = new HashMap<>();
-    private static Long lastId = 0L;
+    private final Map<Long, Item> items = new HashMap<>();
+    private Long lastId = 0L;
 
     @Override
     public Item addItem(Item item) {
