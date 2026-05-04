@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class UpdateUserRequest {
 
-    @Pattern(regexp = ".*\\S.*", message = "Строка не должна быть пустой или состоять только из пробелов")
+    @Pattern(regexp = ".*\\S.*", message = "Имя не должно быть пустым или состоять только из пробелов")
     private String name;
 
     @Email

@@ -14,4 +14,6 @@ public interface UserStorage {
 
     public Optional<User> getUserByEmail(String email);
 
+    public void checkIfUserExists(Long id);
+
 }

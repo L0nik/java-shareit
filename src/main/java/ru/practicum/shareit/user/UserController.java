@@ -22,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody CreateUserRequest userData) {
+    public User createUser(@RequestBody @Valid CreateUserRequest userData) {
         log.info("UserController: получен запрос на добавление пользователя {}", userData);
         return userService.createUser(userData);
     }
@@ -30,7 +30,7 @@ public class UserController {
     @PatchMapping("/{id}")
     public User updateUser(
             @PathVariable Long id,
-            @RequestBody UpdateUserRequest userData
+            @RequestBody @Valid UpdateUserRequest userData
     ) {
         log.info("UserController: получен запрос на обновление данных пользователя (id={}) {}", id, userData);
         return userService.updateUser(id, userData);
