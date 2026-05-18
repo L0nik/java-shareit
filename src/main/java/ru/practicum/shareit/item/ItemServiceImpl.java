@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.dto.ItemCreateRequest;
 import ru.practicum.shareit.item.dto.ItemResponse;
 import ru.practicum.shareit.item.dto.ItemUpdateRequest;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.UserStorage;
+import ru.practicum.shareit.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,12 +19,15 @@ import java.util.Collection;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
     public ItemResponse createItem(ItemCreateRequest itemData, Long ownerId) {
         log.info("ItemServiceImpl: начало добавления новой вещи {} пользователем {}", itemData, ownerId);
-        userStorage.checkIfUserExists(ownerId);
+        if (!userRepository.existsById(ownerId)) {
+            String message = String.format("Пользователь с id=%d не найден", ownerId);
+            throw new NotFoundException(message);
+        }
         Item item = ItemMapper.mapItemCreateRequestToItem(itemData);
         item.setOwnerId(ownerId);
         log.info("ItemServiceImpl: добавлена новая вещь {} пользователем {}", itemData, ownerId);
@@ -34,7 +37,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponse updateItem(Long ownerId, Long itemId, ItemUpdateRequest itemData) {
         log.info("ItemServiceImpl: начало обновления данных вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
-        userStorage.checkIfUserExists(ownerId);
+        if (!userRepository.existsById(ownerId)) {
+            String message = String.format("Пользователь с id=%d не найден", ownerId);
+            throw new NotFoundException(message);
+        }
         Item item = itemStorage.getItemById(itemId);
         if (!item.getOwnerId().equals(ownerId)) {
             String message = String.format("Пользователь %d не является владельцем вещи %d", ownerId, itemId);
