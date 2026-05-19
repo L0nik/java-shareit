@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.dto.ItemCreateRequest;
 import ru.practicum.shareit.item.dto.ItemResponse;
 import ru.practicum.shareit.item.dto.ItemUpdateRequest;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.util.ArrayList;
@@ -18,36 +19,43 @@ import java.util.Collection;
 @Slf4j
 public class ItemServiceImpl implements ItemService {
 
-    private final ItemStorage itemStorage;
+    private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
     @Override
     public ItemResponse createItem(ItemCreateRequest itemData, Long ownerId) {
         log.info("ItemServiceImpl: начало добавления новой вещи {} пользователем {}", itemData, ownerId);
-        if (!userRepository.existsById(ownerId)) {
+        User owner = userRepository.findById(ownerId).orElseThrow(() -> {
             String message = String.format("Пользователь с id=%d не найден", ownerId);
-            throw new NotFoundException(message);
-        }
+            return new NotFoundException(message);
+        });
         Item item = ItemMapper.mapItemCreateRequestToItem(itemData);
-        item.setOwnerId(ownerId);
+        item.setOwner(owner);
+        Item savedItem = itemRepository.save(item);
         log.info("ItemServiceImpl: добавлена новая вещь {} пользователем {}", itemData, ownerId);
-        return ItemMapper.mapToItemResponse(itemStorage.addItem(item));
+        return ItemMapper.mapToItemResponse(savedItem);
     }
 
     @Override
     public ItemResponse updateItem(Long ownerId, Long itemId, ItemUpdateRequest itemData) {
         log.info("ItemServiceImpl: начало обновления данных вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
+
         if (!userRepository.existsById(ownerId)) {
             String message = String.format("Пользователь с id=%d не найден", ownerId);
             throw new NotFoundException(message);
         }
-        Item item = itemStorage.getItemById(itemId);
-        if (!item.getOwnerId().equals(ownerId)) {
+
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> {
+            String message = String.format("вещь с id=%d не найдена", itemId);
+            return new NotFoundException(message);
+        });
+
+        if (!item.getOwner().getId().equals(ownerId)) {
             String message = String.format("Пользователь %d не является владельцем вещи %d", ownerId, itemId);
             throw new NotFoundException(message);
         }
         ItemMapper.updateItemFields(item, itemData);
-        itemStorage.updateItem(item);
+        itemRepository.save(item);
         log.info("ItemServiceImpl: обновлены данные вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
         return ItemMapper.mapToItemResponse(item);
     }
@@ -55,13 +63,17 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponse getItemById(Long itemId) {
         log.info("ItemServiceImpl: получение данных вещи по id (itemId={})", itemId);
-        return ItemMapper.mapToItemResponse(itemStorage.getItemById(itemId));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> {
+            String message = String.format("вещь с id=%d не найдена", itemId);
+            return new NotFoundException(message);
+        });
+        return ItemMapper.mapToItemResponse(item);
     }
 
     @Override
     public Collection<ItemResponse> getItemsByOwner(Long userId) {
         log.info("ItemServiceImpl: получение вещей пользователя (userId={})", userId);
-        return itemStorage.getItemsByOwner(userId)
+        return itemRepository.findByOwnerId(userId)
                 .stream()
                 .map(ItemMapper::mapToItemResponse).toList();
     }
@@ -72,7 +84,7 @@ public class ItemServiceImpl implements ItemService {
         if (text.isEmpty()) {
             return new ArrayList<>();
         }
-        return itemStorage.searchForItems(text).stream()
+        return itemRepository.searchForItems(text).stream()
                 .map(ItemMapper::mapToItemResponse)
                 .toList();
     }
