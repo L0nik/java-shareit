@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.CreateUserRequest;
 import ru.practicum.shareit.user.dto.UpdateUserRequest;
+import ru.practicum.shareit.user.dto.UserResponse;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -16,19 +17,19 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
+    public UserResponse getUser(@PathVariable Long id) {
         log.info("UserController: получен запрос на получение пользователя по id={}", id);
         return userService.getUserById(id);
     }
 
     @PostMapping
-    public User createUser(@RequestBody @Valid CreateUserRequest userData) {
+    public UserResponse createUser(@RequestBody @Valid CreateUserRequest userData) {
         log.info("UserController: получен запрос на добавление пользователя {}", userData);
         return userService.createUser(userData);
     }
 
     @PatchMapping("/{id}")
-    public User updateUser(
+    public UserResponse updateUser(
             @PathVariable Long id,
             @RequestBody @Valid UpdateUserRequest userData
     ) {

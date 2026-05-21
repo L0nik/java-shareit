@@ -1,10 +1,11 @@
 package ru.practicum.shareit.booking;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingResponse;
-import ru.practicum.shareit.booking.dto.CreateBookingRequest;
+import ru.practicum.shareit.booking.dto.BookingCreateRequest;
 
 import java.util.Collection;
 
@@ -19,7 +20,7 @@ public class BookingController {
     @PostMapping
     public BookingResponse createBooking(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestBody CreateBookingRequest bookingData
+            @RequestBody @Valid BookingCreateRequest bookingData
     ) {
         log.info("BookingService: получен запрос на бронирование от пользователя {}: {}", userId, bookingData);
         return bookingService.createBooking(userId, bookingData);
@@ -62,7 +63,7 @@ public class BookingController {
     @GetMapping("/owner")
     public Collection<BookingResponse> getBookingsOfOwner(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam BookingState bookingState
+            @RequestParam(required = false, defaultValue = "ALL") BookingState bookingState
     ) {
         log.info(
                 "BookingService: получен запрос на получение бронирований вещей текущего пользователя (userId = {}, bookingState = {})",

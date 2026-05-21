@@ -7,6 +7,7 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.CreateUserRequest;
 import ru.practicum.shareit.user.dto.UpdateUserRequest;
+import ru.practicum.shareit.user.dto.UserResponse;
 
 import java.util.Optional;
 
@@ -16,16 +17,17 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
 
-    public User getUserById(Long id) {
+    public UserResponse getUserById(Long id) {
         log.info("UserService: начало получения пользователя по id={}", id);
         Optional<User> userOpt = userRepository.findById(id);
-        return userOpt.orElseThrow(() -> {
+        User user = userOpt.orElseThrow(() -> {
             String message = String.format("Пользователь с id=%d не найден", id);
             return new NotFoundException(message);
         });
+        return UserMapper.mapUserToUserResponse(user);
     }
 
-    public User createUser(CreateUserRequest userData) {
+    public UserResponse createUser(CreateUserRequest userData) {
         log.info("UserService: начало создания пользователя {}", userData);
         Optional<User> userFoundByEmailOpt = userRepository.findByEmail(userData.getEmail());
         if (userFoundByEmailOpt.isPresent()) {
@@ -33,11 +35,12 @@ public class UserService {
             throw new ValidationException(message);
         }
         User user = UserMapper.mapCreateUserDtoToUser(userData);
+        userRepository.save(user);
         log.info("UserService: создан пользователь {}", user);
-        return userRepository.save(user);
+        return UserMapper.mapUserToUserResponse(user);
     }
 
-    public User updateUser(Long id, UpdateUserRequest userData) {
+    public UserResponse updateUser(Long id, UpdateUserRequest userData) {
         log.info("UserService: начало обновления данных пользователя (id={}) {}", id, userData);
         User user = userRepository.findById(id).orElseThrow(() -> {
             String message = String.format("Пользователь с id=%d не найден", id);
@@ -53,7 +56,7 @@ public class UserService {
         UserMapper.updateUserFields(user, userData);
         userRepository.save(user);
         log.info("UserService: обновлены данные пользователя (id={}) {}", id, userData);
-        return user;
+        return UserMapper.mapUserToUserResponse(user);
     }
 
     public void deleteUser(Long id) {
