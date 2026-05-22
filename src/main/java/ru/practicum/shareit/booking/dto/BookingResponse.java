@@ -3,10 +3,8 @@ package ru.practicum.shareit.booking.dto;
 import lombok.Data;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.item.dto.ItemResponse;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserResponse;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data

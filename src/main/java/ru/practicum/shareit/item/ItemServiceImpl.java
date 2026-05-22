@@ -3,16 +3,22 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemCreateRequest;
-import ru.practicum.shareit.item.dto.ItemResponse;
-import ru.practicum.shareit.item.dto.ItemUpdateRequest;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +27,8 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public ItemResponse createItem(ItemCreateRequest itemData, Long ownerId) {
@@ -61,21 +69,48 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemResponse getItemById(Long itemId) {
+    public ItemResponseFull getItemById(Long userId, Long itemId) {
         log.info("ItemServiceImpl: получение данных вещи по id (itemId={})", itemId);
+        LocalDateTime now = LocalDateTime.now();
         Item item = itemRepository.findById(itemId).orElseThrow(() -> {
             String message = String.format("вещь с id=%d не найдена", itemId);
             return new NotFoundException(message);
         });
-        return ItemMapper.mapToItemResponse(item);
+
+        LocalDateTime lastBooking = null;
+        LocalDateTime nextBooking = null;
+
+        if (item.getOwner().getId().equals(userId)) {
+            Collection<Booking> itemBookings = bookingRepository.findAllByItemIdOrderByStartDesc(itemId);
+            lastBooking = findLastBookingOfItem(itemBookings, now);
+            nextBooking = findNextBookingOfItem(itemBookings, now);
+        }
+        List<CommentResponse> comments = getCommentsForItem(itemId);
+        return ItemMapper.mapToItemResponseFull(item, lastBooking, nextBooking, comments);
     }
 
     @Override
-    public Collection<ItemResponse> getItemsByOwner(Long userId) {
-        log.info("ItemServiceImpl: получение вещей пользователя (userId={})", userId);
-        return itemRepository.findByOwnerId(userId)
-                .stream()
-                .map(ItemMapper::mapToItemResponse).toList();
+    public Collection<ItemResponseFull> getItemsByOwner(Long ownerId) {
+        log.info("ItemServiceImpl: получение вещей пользователя (ownerId={})", ownerId);
+        LocalDateTime now = LocalDateTime.now();
+        Collection<Item> items = itemRepository.findByOwnerId(ownerId);
+        Collection<Booking> bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+        return items.stream()
+                .map((item) -> {
+                    Collection<Booking> itemBookings = bookings.stream()
+                            .filter(booking -> booking.getItem().getId().equals(item.getId()))
+                            .toList();
+                    LocalDateTime lastBooking = findLastBookingOfItem(itemBookings, now);
+                    LocalDateTime nextBooking = findNextBookingOfItem(itemBookings, now);
+                    List<CommentResponse> comments = getCommentsForItem(item.getId());
+                    return ItemMapper.mapToItemResponseFull(
+                            item,
+                            lastBooking,
+                            nextBooking,
+                            comments
+                    );
+                })
+                .toList();
     }
 
     @Override
@@ -86,6 +121,74 @@ public class ItemServiceImpl implements ItemService {
         }
         return itemRepository.searchForItems(text).stream()
                 .map(ItemMapper::mapToItemResponse)
+                .toList();
+    }
+
+    @Override
+    public CommentResponse createComment(Long authorId, Long itemId, CommentCreateRequest commentData) {
+        log.info(
+                "ItemServiceImpl: создание отзыва  к вещи (authorId = {}, itemId = {}, commentData = {})",
+                authorId,
+                itemId,
+                commentData
+        );
+
+        LocalDateTime now = LocalDateTime.now();
+
+        User author = userRepository.findById(authorId).orElseThrow(() -> {
+            String message = String.format("Пользователь с id=%d не найден", authorId);
+            return new NotFoundException(message);
+        });
+
+        if (!itemRepository.existsById(itemId)) {
+            String message = String.format("Вещь с id=%d не найдена", itemId);
+            throw new NotFoundException(message);
+        }
+
+        bookingRepository.findFirstByItemIdAndBookerIdAndStatusAndEndBefore(
+                itemId,
+                authorId,
+                BookingStatus.APPROVED,
+                now
+        ).orElseThrow(() -> {
+            String message = String.format("пользователь с id=%d не брал в аренду вещь с id=%d", authorId, itemId);
+            return new ValidationException(message);
+        });
+
+        Comment comment = CommentMapper.mapCommentCreateRequestToComment(commentData, author, itemId, now);
+        commentRepository.save(comment);
+
+        log.info(
+                "ItemServiceImpl: создан отзыв к вещи (authorId = {}, itemId = {}, commentData = {})",
+                authorId,
+                itemId,
+                commentData
+        );
+
+        return CommentMapper.mapCommentToCommentResponse(comment, author.getName());
+
+    }
+
+    private LocalDateTime findLastBookingOfItem(Collection<Booking> itemBookings, LocalDateTime now) {
+        return itemBookings.stream()
+                .filter(booking -> booking.getEnd().isBefore(now))
+                .max(Comparator.comparing(Booking::getEnd))
+                .map(Booking::getStart)
+                .orElse(null);
+    }
+
+    private LocalDateTime findNextBookingOfItem(Collection<Booking> itemBookings, LocalDateTime now) {
+        return itemBookings.stream()
+                .filter(booking -> booking.getStart().isAfter(now))
+                .min(Comparator.comparing(Booking::getStart))
+                .map(Booking::getStart)
+                .orElse(null);
+    }
+
+    private List<CommentResponse> getCommentsForItem(Long itemId) {
+        return commentRepository.findByItemIdOrderByCreatedDesc(itemId)
+                .stream()
+                .map(comment -> CommentMapper.mapCommentToCommentResponse(comment, comment.getAuthor().getName()))
                 .toList();
     }
 

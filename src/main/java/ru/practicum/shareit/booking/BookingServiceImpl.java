@@ -3,8 +3,8 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingResponse;
 import ru.practicum.shareit.booking.dto.BookingCreateRequest;
+import ru.practicum.shareit.booking.dto.BookingResponse;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemMapper;
@@ -14,10 +14,8 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,7 +120,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Collection<Booking> bookings;
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
 
         switch (bookingState) {
             case BookingState.ALL -> bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
@@ -162,7 +160,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Collection<Booking> bookings;
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
 
         switch (bookingState) {
             case BookingState.ALL -> bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
