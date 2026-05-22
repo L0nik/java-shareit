@@ -70,7 +70,7 @@ public class BookingServiceImpl implements BookingService {
             String message = String.format("Бронирование с id=%d не найдено", bookingId);
             return new NotFoundException(message);
         });
-        if(!booking.getItem().getOwner().getId().equals(ownerId)) {
+        if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             String message = String.format("Пользователь с id=%d не является владельцем вещи", ownerId);
             throw new ValidationException(message);
         }
