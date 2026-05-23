@@ -2,7 +2,9 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -23,6 +25,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
@@ -31,6 +34,7 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
 
     @Override
+    @Transactional
     public ItemResponse createItem(ItemCreateRequest itemData, Long ownerId) {
         log.info("ItemServiceImpl: начало добавления новой вещи {} пользователем {}", itemData, ownerId);
         User owner = userRepository.findById(ownerId).orElseThrow(() -> {
@@ -45,6 +49,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemResponse updateItem(Long ownerId, Long itemId, ItemUpdateRequest itemData) {
         log.info("ItemServiceImpl: начало обновления данных вещи {} (ownerId={}, itemId={})", itemData, ownerId, itemId);
 
@@ -81,7 +86,8 @@ public class ItemServiceImpl implements ItemService {
         LocalDateTime nextBooking = null;
 
         if (item.getOwner().getId().equals(userId)) {
-            Collection<Booking> itemBookings = bookingRepository.findAllByItemIdOrderByStartDesc(itemId);
+            Sort newestFirst = Sort.by(Sort.Direction.DESC, "start");
+            Collection<Booking> itemBookings = bookingRepository.findAllByItemId(itemId, newestFirst);
             lastBooking = findLastBookingOfItem(itemBookings, now);
             nextBooking = findNextBookingOfItem(itemBookings, now);
         }
@@ -94,7 +100,8 @@ public class ItemServiceImpl implements ItemService {
         log.info("ItemServiceImpl: получение вещей пользователя (ownerId={})", ownerId);
         LocalDateTime now = LocalDateTime.now();
         Collection<Item> items = itemRepository.findByOwnerId(ownerId);
-        Collection<Booking> bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+        Sort newestFirst = Sort.by(Sort.Direction.DESC, "start");
+        Collection<Booking> bookings = bookingRepository.findAllByItemOwnerId(ownerId, newestFirst);
         return items.stream()
                 .map((item) -> {
                     Collection<Booking> itemBookings = bookings.stream()
@@ -125,6 +132,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public CommentResponse createComment(Long authorId, Long itemId, CommentCreateRequest commentData) {
         log.info(
                 "ItemServiceImpl: создание отзыва  к вещи (authorId = {}, itemId = {}, commentData = {})",

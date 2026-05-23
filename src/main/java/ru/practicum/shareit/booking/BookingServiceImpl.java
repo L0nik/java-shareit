@@ -2,7 +2,9 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingCreateRequest;
 import ru.practicum.shareit.booking.dto.BookingResponse;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -28,10 +31,9 @@ public class BookingServiceImpl implements BookingService {
     private final ItemRepository itemRepository;
 
     @Override
+    @Transactional
     public BookingResponse createBooking(Long bookerId, BookingCreateRequest bookingData) {
         log.info("BookingServiceImpl: начало создания бронирования пользователем id = {}: {}", bookerId, bookingData);
-
-        LocalDateTime now = LocalDateTime.now();
 
         User booker = userRepository.findById(bookerId).orElseThrow(() -> {
             String message = String.format("Пользователь с id=%d не найден", bookerId);
@@ -50,7 +52,7 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = BookingMapper.mapBookingCreateRequestToBooking(bookingData, item, booker, BookingStatus.WAITING);
         booking = bookingRepository.save(booking);
-        log.info("BookingServiceImpl: бронирвоание успешно создано: {}", booking);
+        log.info("BookingServiceImpl: бронирование успешно создано: {}", booking);
         return BookingMapper.mapBookingToBookingResponse(
                 booking,
                 ItemMapper.mapToItemResponse(item),
@@ -59,6 +61,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponse approveRejectBooking(Long ownerId, Long bookingId, boolean approved) {
         log.info(
                 "BookingServiceImpl: начало одобрения/отклонения бронирования (ownerId = {}, bookingId = {}, approved = {})",
@@ -119,23 +122,22 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException(message);
         }
 
-        Collection<Booking> bookings;
         LocalDateTime now = LocalDateTime.now();
+        Sort newestFirst = Sort.by(Sort.Direction.DESC, "start");
 
-        switch (bookingState) {
-            case BookingState.ALL -> bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
+        Collection<Booking> bookings = switch (bookingState) {
+            case BookingState.ALL -> bookings = bookingRepository.findAllByBookerId(bookerId, newestFirst);
             case BookingState.WAITING -> bookings =
-                    bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                    bookingRepository.findAllByBookerIdAndStatus(bookerId, BookingStatus.WAITING, newestFirst);
             case BookingState.REJECTED -> bookings =
-                    bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                    bookingRepository.findAllByBookerIdAndStatus(bookerId, BookingStatus.REJECTED, newestFirst);
             case BookingState.CURRENT -> bookings =
-                    bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId, now, now);
+                    bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, newestFirst);
             case BookingState.PAST -> bookings =
-                    bookingRepository.findAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, now);
+                    bookingRepository.findAllByBookerIdAndEndBefore(bookerId, now, newestFirst);
             case BookingState.FUTURE -> bookings =
-                    bookingRepository.findAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, now);
-            default -> throw new ValidationException("Некорректное значение параметра 'state'");
-        }
+                    bookingRepository.findAllByBookerIdAndStartAfter(bookerId, now, newestFirst);
+        };
 
         return bookings.stream()
                 .map(booking -> BookingMapper.mapBookingToBookingResponse(
@@ -159,23 +161,22 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException(message);
         }
 
-        Collection<Booking> bookings;
         LocalDateTime now = LocalDateTime.now();
+        Sort newestFirst = Sort.by(Sort.Direction.DESC, "start");
 
-        switch (bookingState) {
-            case BookingState.ALL -> bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+        Collection<Booking> bookings = switch (bookingState) {
+            case BookingState.ALL -> bookings = bookingRepository.findAllByItemOwnerId(ownerId, newestFirst);
             case BookingState.WAITING -> bookings =
-                    bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.WAITING);
+                    bookingRepository.findAllByItemOwnerIdAndStatus(ownerId, BookingStatus.WAITING, newestFirst);
             case BookingState.REJECTED -> bookings =
-                    bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, BookingStatus.REJECTED);
+                    bookingRepository.findAllByItemOwnerIdAndStatus(ownerId, BookingStatus.REJECTED, newestFirst);
             case BookingState.CURRENT -> bookings =
-                    bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(ownerId, now, now);
+                    bookingRepository.findAllByItemOwnerIdAndStartBeforeAndEndAfter(ownerId, now, now, newestFirst);
             case BookingState.PAST -> bookings =
-                    bookingRepository.findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(ownerId, now);
+                    bookingRepository.findAllByItemOwnerIdAndEndBefore(ownerId, now, newestFirst);
             case BookingState.FUTURE -> bookings =
-                    bookingRepository.findAllByItemOwnerIdAndStartAfterOrderByStartDesc(ownerId, now);
-            default -> throw new ValidationException("Некорректное значение параметра 'state'");
-        }
+                    bookingRepository.findAllByItemOwnerIdAndStartAfter(ownerId, now, newestFirst);
+        };
 
         return bookings.stream()
                 .map(booking -> BookingMapper.mapBookingToBookingResponse(

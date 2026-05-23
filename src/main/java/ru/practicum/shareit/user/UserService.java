@@ -3,6 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.CreateUserRequest;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
 
@@ -27,6 +29,7 @@ public class UserService {
         return UserMapper.mapUserToUserResponse(user);
     }
 
+    @Transactional
     public UserResponse createUser(CreateUserRequest userData) {
         log.info("UserService: начало создания пользователя {}", userData);
         Optional<User> userFoundByEmailOpt = userRepository.findByEmail(userData.getEmail());
@@ -40,6 +43,7 @@ public class UserService {
         return UserMapper.mapUserToUserResponse(user);
     }
 
+    @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest userData) {
         log.info("UserService: начало обновления данных пользователя (id={}) {}", id, userData);
         User user = userRepository.findById(id).orElseThrow(() -> {
@@ -59,6 +63,7 @@ public class UserService {
         return UserMapper.mapUserToUserResponse(user);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         log.info("UserService: начало удаления пользователя по id={}", id);
         userRepository.deleteById(id);

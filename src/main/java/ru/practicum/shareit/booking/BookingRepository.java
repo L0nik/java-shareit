@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,44 +11,46 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByBookerIdOrderByStartDesc(Long bookerId);
+    Collection<Booking> findAllByBookerId(Long bookerId, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByBookerIdAndStatusOrderByStartDesc(Long bookerId, BookingStatus status);
+    Collection<Booking> findAllByBookerIdAndStatus(Long bookerId, BookingStatus status, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+    Collection<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(
             Long bookerId,
             LocalDateTime nowStart,
-            LocalDateTime nowEnd
+            LocalDateTime nowEnd,
+            Sort sort
     );
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByBookerIdAndEndBeforeOrderByStartDesc(Long bookerId, LocalDateTime now);
+    Collection<Booking> findAllByBookerIdAndEndBefore(Long bookerId, LocalDateTime now, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByBookerIdAndStartAfterOrderByStartDesc(Long bookerId, LocalDateTime now);
+    Collection<Booking> findAllByBookerIdAndStartAfter(Long bookerId, LocalDateTime now, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "booker"})
-    Collection<Booking> findAllByItemOwnerIdOrderByStartDesc(Long ownerId);
+    Collection<Booking> findAllByItemOwnerId(Long ownerId, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "item.owner", "booker"})
-    Collection<Booking> findAllByItemOwnerIdAndStatusOrderByStartDesc(Long ownerId, BookingStatus status);
+    Collection<Booking> findAllByItemOwnerIdAndStatus(Long ownerId, BookingStatus status, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "item.owner", "booker"})
-    Collection<Booking> findAllByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+    Collection<Booking> findAllByItemOwnerIdAndStartBeforeAndEndAfter(
             Long ownerId,
             LocalDateTime nowStart,
-            LocalDateTime nowEnd
+            LocalDateTime nowEnd,
+            Sort sort
     );
 
     @EntityGraph(attributePaths = {"item", "item.owner", "booker"})
-    Collection<Booking> findAllByItemOwnerIdAndEndBeforeOrderByStartDesc(Long ownerId, LocalDateTime now);
+    Collection<Booking> findAllByItemOwnerIdAndEndBefore(Long ownerId, LocalDateTime now, Sort sort);
 
     @EntityGraph(attributePaths = {"item", "item.owner", "booker"})
-    Collection<Booking> findAllByItemOwnerIdAndStartAfterOrderByStartDesc(Long ownerId, LocalDateTime now);
+    Collection<Booking> findAllByItemOwnerIdAndStartAfter(Long ownerId, LocalDateTime now, Sort sort);
 
-    Collection<Booking> findAllByItemIdOrderByStartDesc(Long itemId);
+    Collection<Booking> findAllByItemId(Long itemId, Sort sort);
 
     Optional<Booking> findFirstByItemIdAndBookerIdAndStatusAndEndBefore(
             Long itemId,

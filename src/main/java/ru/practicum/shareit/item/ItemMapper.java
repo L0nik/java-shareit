@@ -54,7 +54,7 @@ public class ItemMapper {
             item.setDescription(itemUpdateRequest.getDescription());
         }
 
-        if (itemUpdateRequest.hasAvailavle()) {
+        if (itemUpdateRequest.hasAvailable()) {
             item.setAvailable(itemUpdateRequest.getAvailable());
         }
 

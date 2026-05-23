@@ -1,10 +1,11 @@
 package ru.practicum.shareit.item.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class CommentCreateRequest {
-    @NotNull
+    @NotBlank(message = "Отсутствует текст комментария")
     private String text;
 }
