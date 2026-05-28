@@ -4,9 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemCreateRequest;
-import ru.practicum.shareit.item.dto.ItemResponse;
-import ru.practicum.shareit.item.dto.ItemUpdateRequest;
+import ru.practicum.shareit.item.dto.*;
 
 import java.util.Collection;
 
@@ -38,13 +36,13 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemResponse getItemById(@PathVariable Long itemId) {
+    public ItemResponseFull getItemById(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId) {
         log.info("ItemController: получен запрос на получение данных вещи (itemId={})", itemId);
-        return itemService.getItemById(itemId);
+        return itemService.getItemById(userId, itemId);
     }
 
     @GetMapping
-    public Collection<ItemResponse> getItemsByOwner(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Collection<ItemResponseFull> getItemsByOwner(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("ItemController: получен запрос на получение вещей владельца (userId={})", userId);
         return itemService.getItemsByOwner(userId);
     }
@@ -53,5 +51,20 @@ public class ItemController {
     public Collection<ItemResponse> searchForItems(@RequestParam String text) {
         log.info("ItemController: получен запрос на поиск вещей по строке (text={})", text);
         return itemService.searchForItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentResponse createComment(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid CommentCreateRequest commentData
+    ) {
+        log.info(
+                "ItemController: получен запрос на создание отзыва (userId = {}, itemId = {}, commentData = {})",
+                userId,
+                itemId,
+                commentData
+        );
+        return itemService.createComment(userId, itemId, commentData);
     }
 }
