@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "item_requests")
@@ -29,6 +32,7 @@ public class ItemRequest {
     @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
 
-    //private Collection<Item> items;
+    @OneToMany(mappedBy = "itemRequest")
+    private List<Item> items = new ArrayList<>();
 
 }

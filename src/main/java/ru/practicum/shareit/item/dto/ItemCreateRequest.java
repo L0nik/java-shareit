@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.lang.Nullable;
 
 @Data
 public class ItemCreateRequest {
@@ -15,5 +16,8 @@ public class ItemCreateRequest {
 
     @NotNull
     private Boolean available;
+
+    @Nullable
+    private Long requestId;
 
 }

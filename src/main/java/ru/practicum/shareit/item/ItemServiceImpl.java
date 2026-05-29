@@ -13,6 +13,8 @@ import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -32,6 +34,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Override
     @Transactional
@@ -41,7 +44,16 @@ public class ItemServiceImpl implements ItemService {
             String message = String.format("Пользователь с id=%d не найден", ownerId);
             return new NotFoundException(message);
         });
-        Item item = ItemMapper.mapItemCreateRequestToItem(itemData);
+
+        ItemRequest itemRequest = null;
+        if (itemData.getRequestId() != null) {
+            itemRequest = itemRequestRepository.findById(itemData.getRequestId()).orElseThrow(() -> {
+                String message = String.format("Запрос с id=%d не найден", itemData.getRequestId());
+                return new NotFoundException(message);
+            });
+        }
+
+        Item item = ItemMapper.mapItemCreateRequestToItem(itemData, itemRequest);
         item.setOwner(owner);
         Item savedItem = itemRepository.save(item);
         log.info("ItemServiceImpl: добавлена новая вещь {} пользователем {}", itemData, ownerId);

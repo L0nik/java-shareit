@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemResponse;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
 import ru.practicum.shareit.user.User;
@@ -50,7 +52,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         });
         Sort sort = Sort.by(Sort.Direction.DESC, "created");
         Collection<ItemRequest> itemRequests = itemRequestRepository.findByRequesterId(userId, sort);
-        return itemRequests.stream().map(ItemRequestMapper::mapItemRequestToItemRequestResponseDto).toList();
+        return itemRequests.stream()
+                .map(itemRequest -> {
+                    Collection<ItemResponse> items = itemRequest.getItems().stream()
+                            .map(ItemMapper::mapToItemResponse)
+                            .toList();
+                    return ItemRequestMapper.mapItemRequestToItemRequestResponseDto(itemRequest, items);
+                })
+                .toList();
     }
 
     @Override
@@ -58,7 +67,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("ItemRequestServiceImpl: получение списка всех запросов вещей (userId = {})", userId);
         Sort sort = Sort.by(Sort.Direction.DESC, "created");
         Collection<ItemRequest> itemRequests = itemRequestRepository.findAll(sort);
-        return itemRequests.stream().map(ItemRequestMapper::mapItemRequestToItemRequestResponseDto).toList();
+        return itemRequests.stream()
+                .map(itemRequest -> {
+                    Collection<ItemResponse> items = itemRequest.getItems().stream()
+                            .map(ItemMapper::mapToItemResponse)
+                            .toList();
+                    return ItemRequestMapper.mapItemRequestToItemRequestResponseDto(itemRequest, items);
+                })
+                .toList();
     }
 
     @Override
@@ -68,6 +84,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             String message = String.format("Запрос вещи с id=%d не найден", requestId);
             return new NotFoundException(message);
         });
-        return ItemRequestMapper.mapItemRequestToItemRequestResponseDto(itemRequest);
+        Collection<ItemResponse> items = itemRequest.getItems().stream()
+                .map(ItemMapper::mapToItemResponse)
+                .toList();
+        return ItemRequestMapper.mapItemRequestToItemRequestResponseDto(itemRequest, items);
     }
 }

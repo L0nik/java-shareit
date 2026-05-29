@@ -1,8 +1,10 @@
 package ru.practicum.shareit.item;
 
 import lombok.experimental.UtilityClass;
+import org.springframework.lang.Nullable;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,11 +38,12 @@ public class ItemMapper {
         return itemResponse;
     }
 
-    public Item mapItemCreateRequestToItem(ItemCreateRequest itemCreateRequest) {
+    public Item mapItemCreateRequestToItem(ItemCreateRequest itemCreateRequest, @Nullable ItemRequest itemRequest) {
         Item item = new Item();
         item.setName(itemCreateRequest.getName());
         item.setDescription(itemCreateRequest.getDescription());
         item.setAvailable(itemCreateRequest.getAvailable());
+        item.setItemRequest(itemRequest);
         return item;
     }
 
