@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@RequestBody @Valid CreateUserRequest userData) {
+    public UserResponse createUser(@RequestBody CreateUserRequest userData) {
         log.info("UserController: получен запрос на добавление пользователя {}", userData);
         return userService.createUser(userData);
     }
@@ -31,7 +30,7 @@ public class UserController {
     @PatchMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable Long id,
-            @RequestBody @Valid UpdateUserRequest userData
+            @RequestBody UpdateUserRequest userData
     ) {
         log.info("UserController: получен запрос на обновление данных пользователя (id={}) {}", id, userData);
         return userService.updateUser(id, userData);
