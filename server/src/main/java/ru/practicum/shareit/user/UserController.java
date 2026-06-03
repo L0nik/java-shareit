@@ -16,7 +16,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id) {
+    public UserResponse getUserById(@PathVariable Long id) {
         log.info("UserController: получен запрос на получение пользователя по id={}", id);
         return userService.getUserById(id);
     }
