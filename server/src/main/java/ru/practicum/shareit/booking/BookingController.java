@@ -71,4 +71,5 @@ public class BookingController {
         );
         return bookingService.getBookingsOfOwner(userId, bookingState);
     }
+
 }
