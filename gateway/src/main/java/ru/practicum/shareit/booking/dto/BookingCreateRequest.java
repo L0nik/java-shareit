@@ -24,11 +24,23 @@ public class BookingCreateRequest {
 
     @AssertTrue(message = "Дата начала бронирования не может быть позже даты окончания бронирования")
     public boolean isStartBeforeEnd() {
+
+        if (start == null || end == null) {
+            return true;
+        }
+
         return start.isBefore(end);
+
     }
 
     @AssertTrue(message = "Дата начала бронирования не должна совпадать с датой окончания бронирования")
     public boolean isStartNotEqualEnd() {
+
+        if (start == null || end == null) {
+            return true;
+        }
+
         return !start.equals(end);
+
     }
 }
