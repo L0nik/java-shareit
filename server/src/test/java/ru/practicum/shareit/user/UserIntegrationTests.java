@@ -7,12 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.CreateUserRequest;
 import ru.practicum.shareit.user.dto.UpdateUserRequest;
 import ru.practicum.shareit.user.dto.UserResponse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
@@ -68,6 +70,23 @@ public class UserIntegrationTests {
     }
 
     @Test
+    void createUser_whenEmailAlreadyExists_shouldThrowException() {
+        User user = new User();
+        user.setName("user1");
+        user.setEmail("duplicate@test.com");
+        entityManager.persist(user);
+        entityManager.flush();
+
+        CreateUserRequest duplicateData = new CreateUserRequest();
+        duplicateData.setName("user2");
+        duplicateData.setEmail("duplicate@test.com");
+
+        assertThrows(ValidationException.class, () -> {
+            userService.createUser(duplicateData);
+        });
+    }
+
+    @Test
     void updateUser_whenDataIsValid_shouldUpdateAndReturnUser() {
 
         User user = new User();
@@ -99,6 +118,42 @@ public class UserIntegrationTests {
     }
 
     @Test
+    void updateUser_whenOnlyNamePresented_shouldUpdateOnlyName() {
+        User user = new User();
+        user.setName("old name");
+        user.setEmail("user@test.com");
+        entityManager.persist(user);
+        entityManager.flush();
+
+        UpdateUserRequest updateRequest = new UpdateUserRequest();
+        updateRequest.setName("new name");
+        updateRequest.setEmail(null);
+
+        UserResponse updatedUser = userService.updateUser(user.getId(), updateRequest);
+
+        assertThat(updatedUser.getName(), equalTo("new name"));
+        assertThat(updatedUser.getEmail(), equalTo("user@test.com"));
+    }
+
+    @Test
+    void updateUser_whenOnlyEmailPresented_shouldUpdateOnlyEmail() {
+        User user = new User();
+        user.setName("user name");
+        user.setEmail("old@test.com");
+        entityManager.persist(user);
+        entityManager.flush();
+
+        UpdateUserRequest updateRequest = new UpdateUserRequest();
+        updateRequest.setName(null);
+        updateRequest.setEmail("new@test.com");
+
+        UserResponse updatedUser = userService.updateUser(user.getId(), updateRequest);
+
+        assertThat(updatedUser.getName(), equalTo("user name"));
+        assertThat(updatedUser.getEmail(), equalTo("new@test.com"));
+    }
+
+    @Test
     void deleteUser_whenUserExists_shouldDeleteUserFromDb() {
 
         User user = new User();
@@ -118,6 +173,5 @@ public class UserIntegrationTests {
 
         assertThat(deletedUserDb, nullValue());
     }
-
 
 }

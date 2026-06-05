@@ -299,7 +299,7 @@ public class BookingControllerTests {
         Long userId = 1L;
 
         UserResponse booker = createUserResponse(2L, "Booker", "booker@test.com");
-        ItemResponse item = createItemResponse(3L, "Отвертка", "Описание", true);
+        ItemResponse item = createItemResponse(3L, "item", "description", true);
         BookingResponse bookingResponse = createBookingResponse(
                 15L,
                 LocalDateTime.now().plusHours(1),
@@ -330,7 +330,7 @@ public class BookingControllerTests {
         BookingState state = BookingState.REJECTED;
 
         UserResponse booker = createUserResponse(2L, "Booker", "booker@test.com");
-        ItemResponse item = createItemResponse(3L, "Отвертка", "Описание", true);
+        ItemResponse item = createItemResponse(3L, "item", "description", true);
         BookingResponse bookingResponse = createBookingResponse(
                 15L,
                 LocalDateTime.now().plusHours(1),

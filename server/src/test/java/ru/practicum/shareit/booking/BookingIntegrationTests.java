@@ -9,6 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingCreateRequest;
 import ru.practicum.shareit.booking.dto.BookingResponse;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.item.dto.ItemCreateRequest;
 import ru.practicum.shareit.item.dto.ItemResponse;
@@ -22,6 +24,7 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
@@ -61,6 +64,38 @@ public class BookingIntegrationTests {
     }
 
     @Test
+    void createBooking_whenItemIsNotAvailable_shouldThrowValidationException() {
+        ItemCreateRequest itemData = new ItemCreateRequest();
+        itemData.setName("item");
+        itemData.setDescription("description");
+        itemData.setAvailable(false);
+        ItemResponse item = itemService.createItem(itemData, owner.getId());
+
+        BookingCreateRequest bookingData = getTestBookingData(item.getId());
+
+        assertThrows(
+                ValidationException.class,
+                () -> bookingService.createBooking(booker.getId(), bookingData)
+        );
+    }
+
+    @Test
+    void createBooking_whenUserOrItemNotFound_shouldThrowNotFoundException() {
+        BookingCreateRequest bookingData = getTestBookingData(item.getId());
+
+        assertThrows(
+                ru.practicum.shareit.exception.NotFoundException.class,
+                () -> bookingService.createBooking(999L, bookingData)
+        );
+
+        BookingCreateRequest badItemBookingData = getTestBookingData(999L);
+        assertThrows(
+                ru.practicum.shareit.exception.NotFoundException.class,
+                () -> bookingService.createBooking(booker.getId(), badItemBookingData)
+        );
+    }
+
+    @Test
     void approveRejectBooking_test() {
 
         BookingCreateRequest bookingData = getTestBookingData(item.getId());
@@ -74,6 +109,36 @@ public class BookingIntegrationTests {
         assertThat(approvedBooking, notNullValue());
         assertThat(approvedBooking.getId(), equalTo(booking.getId()));
         assertThat(approvedBooking.getStatus(), equalTo(BookingStatus.APPROVED));
+    }
+
+    @Test
+    void approveRejectBooking_byNotOwner_shouldThrowNotFoundException() {
+        BookingCreateRequest bookingData = getTestBookingData(item.getId());
+        BookingResponse booking = bookingService.createBooking(booker.getId(), bookingData);
+
+        CreateUserRequest userData = new CreateUserRequest();
+        userData.setName("user");
+        userData.setEmail("user@test.com");
+        UserResponse user = userService.createUser(userData);
+
+        assertThrows(
+                ValidationException.class,
+                () -> bookingService.approveRejectBooking(user.getId(), booking.getId(), true)
+        );
+    }
+
+    @Test
+    void approveRejectBooking_whenBookingNotFoundOrRejected_shouldHandleCorrectly() {
+        BookingCreateRequest bookingData = getTestBookingData(item.getId());
+        BookingResponse booking = bookingService.createBooking(booker.getId(), bookingData);
+
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.approveRejectBooking(owner.getId(), 999L, true)
+        );
+
+        BookingResponse rejectedBooking = bookingService.approveRejectBooking(owner.getId(), booking.getId(), false);
+        assertThat(rejectedBooking.getStatus(), equalTo(BookingStatus.REJECTED));
     }
 
     @Test
@@ -96,6 +161,14 @@ public class BookingIntegrationTests {
         assertThat(booking.getBooker().getId(), equalTo(booker.getId()));
         assertThat(booking.getBooker().getName(), equalTo(booker.getName()));
 
+    }
+
+    @Test
+    void getBookingById_whenNotFound_shouldThrowNotFoundException() {
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getBookingById(999L)
+        );
     }
 
     @Test
@@ -165,6 +238,21 @@ public class BookingIntegrationTests {
         Collection<BookingResponse> rejected = bookingService.getBookingsOfOwner(owner.getId(), BookingState.REJECTED);
         assertThat(rejected, hasSize(1));
         assertThat(rejected.iterator().next().getId(), equalTo(bookings.get("rejectedBooking").getId()));
+    }
+
+    @Test
+    void getBookings_whenUserDoesNotExist_shouldThrowNotFoundException() {
+        // 1. Ошибка для getBookingsOfUser при несуществующем пользователе
+        org.junit.jupiter.api.Assertions.assertThrows(
+                ru.practicum.shareit.exception.NotFoundException.class,
+                () -> bookingService.getBookingsOfUser(999L, BookingState.ALL)
+        );
+
+        // 2. Ошибка для getBookingsOfOwner при несуществующем пользователе
+        org.junit.jupiter.api.Assertions.assertThrows(
+                ru.practicum.shareit.exception.NotFoundException.class,
+                () -> bookingService.getBookingsOfOwner(999L, BookingState.ALL)
+        );
     }
 
     private CreateUserRequest getTestOwnerData() {

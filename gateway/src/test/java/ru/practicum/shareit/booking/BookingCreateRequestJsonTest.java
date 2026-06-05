@@ -34,17 +34,24 @@ class BookingCreateRequestJsonTest {
     @Test
     void deserialize_whenJsonIsValid_shouldCreateObjectWithoutValidationErrors() throws Exception {
 
-        String jsonContent = "{" +
-                "    \"itemId\": 1," +
-                "    \"start\": \"2026-06-05T12:00:00\"," +
-                "    \"end\": \"2026-06-06T12:00:00\"" +
-                "}";
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime end = LocalDateTime.now().plusDays(2).withNano(0);
+
+        String jsonContent = String.format(
+                "{\n" +
+                        "    \"itemId\": 1,\n" +
+                        "    \"start\": \"%s\",\n" +
+                        "    \"end\": \"%s\"\n" +
+                        "}",
+                start,
+                end
+        );
 
         BookingCreateRequest request = json.parseObject(jsonContent);
 
         assertThat(request.getItemId()).isEqualTo(1L);
-        assertThat(request.getStart()).isEqualTo(LocalDateTime.of(2026, 6, 5, 12, 0, 0));
-        assertThat(request.getEnd()).isEqualTo(LocalDateTime.of(2026, 6, 6, 12, 0, 0));
+        assertThat(request.getStart()).isEqualTo(start);
+        assertThat(request.getEnd()).isEqualTo(end);
 
         Set<ConstraintViolation<BookingCreateRequest>> violations = validator.validate(request);
         assertThat(violations).isEmpty();
