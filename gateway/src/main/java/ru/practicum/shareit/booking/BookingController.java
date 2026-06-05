@@ -48,26 +48,26 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<Object> getBookingsOfUser(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(required = false, defaultValue = "ALL") BookingState bookingState
+            @RequestParam(required = false, defaultValue = "ALL") BookingState state
     ) {
         log.info(
-                "BookingService: получен запрос на получение бронирований пользователя (userId = {}, bookingState = {})",
+                "BookingService: получен запрос на получение бронирований пользователя (userId = {}, state = {})",
                 userId,
-                bookingState
+                state
         );
-        return bookingClient.getBookingsOfUser(userId, bookingState);
+        return bookingClient.getBookingsOfUser(userId, state);
     }
 
     @GetMapping("/owner")
     public ResponseEntity<Object> getBookingsOfOwner(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(required = false, defaultValue = "ALL") BookingState bookingState
+            @RequestParam(required = false, defaultValue = "ALL") BookingState state
     ) {
         log.info(
-                "BookingService: получен запрос на получение бронирований вещей текущего пользователя (userId = {}, bookingState = {})",
+                "BookingService: получен запрос на получение бронирований вещей текущего пользователя (userId = {}, state = {})",
                 userId,
-                bookingState
+                state
         );
-        return bookingClient.getBookingsOfOwner(userId, bookingState);
+        return bookingClient.getBookingsOfOwner(userId, state);
     }
 }
