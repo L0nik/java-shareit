@@ -97,6 +97,7 @@ public class UserIntegrationTests {
         assertThat(updatedUserDb.getEmail(), equalTo(userDataUpdate.getEmail()));
 
     }
+
     @Test
     void deleteUser_whenUserExists_shouldDeleteUserFromDb() {
 
