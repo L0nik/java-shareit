@@ -1,0 +1,75 @@
+package ru.practicum.shareit.booking;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.dto.BookingCreateRequest;
+import ru.practicum.shareit.booking.dto.BookingResponse;
+
+import java.util.Collection;
+
+@RestController
+@RequestMapping(path = "/bookings")
+@RequiredArgsConstructor
+@Slf4j
+public class BookingController {
+
+    private final BookingService bookingService;
+
+    @PostMapping
+    public BookingResponse createBooking(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestBody BookingCreateRequest bookingData
+    ) {
+        log.info("BookingService: получен запрос на бронирование от пользователя {}: {}", userId, bookingData);
+        return bookingService.createBooking(userId, bookingData);
+    }
+
+    @PatchMapping("/{bookingId}")
+    public BookingResponse approveRejectBooking(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long bookingId,
+            @RequestParam boolean approved
+    ) {
+        log.info(
+                "BookingService: получен запрос на одобрение/отказ по бронированию (userId = {}, bookingId = {}, approved = {})",
+                userId,
+                bookingId,
+                approved
+        );
+        return bookingService.approveRejectBooking(userId, bookingId, approved);
+    }
+
+    @GetMapping("/{bookingId}")
+    public BookingResponse getBookingById(@PathVariable Long bookingId) {
+        log.info("BookingService: получен запрос на получение бронирования по id = {}", bookingId);
+        return bookingService.getBookingById(bookingId);
+    }
+
+    @GetMapping
+    public Collection<BookingResponse> getBookingsOfUser(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestParam(required = false, defaultValue = "ALL") BookingState state
+    ) {
+        log.info(
+                "BookingService: получен запрос на получение бронирований пользователя (userId = {}, state = {})",
+                userId,
+                state
+        );
+        return bookingService.getBookingsOfUser(userId, state);
+    }
+
+    @GetMapping("/owner")
+    public Collection<BookingResponse> getBookingsOfOwner(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestParam(required = false, defaultValue = "ALL") BookingState state
+    ) {
+        log.info(
+                "BookingService: получен запрос на получение бронирований вещей текущего пользователя (userId = {}, state = {})",
+                userId,
+                state
+        );
+        return bookingService.getBookingsOfOwner(userId, state);
+    }
+
+}
