@@ -268,7 +268,7 @@ public class BookingControllerTests {
 
         mvc.perform(get("/bookings")
                         .header(USER_ID_HEADER, userId)
-                        .param("bookingState", "WAITING")
+                        .param("state", "WAITING")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -345,7 +345,7 @@ public class BookingControllerTests {
 
         mvc.perform(get("/bookings/owner")
                         .header(USER_ID_HEADER, userId)
-                        .param("bookingState", "REJECTED")
+                        .param("state", "REJECTED")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
